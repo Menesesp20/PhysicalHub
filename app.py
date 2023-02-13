@@ -135,7 +135,7 @@ def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
     if halfGame == 'First':
             heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
     elif halfGame == 'Second':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] == endGame)].reset_index(drop=True)
+            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
 
     bs = pitch.bin_statistic(heatMap['x'], heatMap['y'], bins=(10, 8))
     pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
