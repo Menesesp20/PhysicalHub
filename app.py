@@ -93,34 +93,31 @@ playerGPS = ETL_GPS()
 
 # Sidebar - Player selection
 sorted_unique_Player = sorted(playerGPS.Player.unique())
-selected_player = st.sidebar.selectbox('Players', sorted_unique_Player)
+selected_player = st.sidebar.selectbox('Players:', sorted_unique_Player)
+
+# Sidebar - GameDay selection
+sorted_unique_Day = sorted(playerGPS.Day.unique())
+selected_Day = st.sidebar.selectbox('MatchDay:', sorted_unique_Day)
 
 half_option = ['First', 'Second']
 select_half = st.sidebar.selectbox('Period', half_option)
 
-firstHalf = '17:30:00'
+start_game = st.sidebar.text_input('Start Hours', '17:30:00')
 
+half_end1st = st.sidebar.text_input('First Half Hours', '18:18:00')
 
-#half_hours = ['First', 'Second']
-half_end1st = st.sidebar.text_input('Half Hours', '18:18:00')
+half_start2nd = st.sidebar.text_input('Second Half Hours', '18:35:00')
 
-half_start2nd = st.sidebar.text_input('Half Hours', '18:35:00')
-#half = '18:18:00'
-
-secondHalf = '18:35:00'
-
-gameEnd = '19:22:00'
+end_game = st.sidebar.text_input('End Hours', '19:22:00')
 
 # Funtion to generate GPS Player HeatMap
 st.cache()
-def catapultHeatMap(df, playerName, halfGame, halfBreak1st, halfBreak2nd):
+def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
     
     # Load GPS DATA (CSV FILE)
     #data = pd.read_csv(filePath, delimiter=';')
     
-    data = df.loc[df.Player == playerName].reset_index(drop=True)
-    
-    namePlayer = data['Player'].unique()[0]
+    data = df.loc[(df.Player == playerName) & (df.Day == matchDay)].reset_index(drop=True)
     
     # CREATE PITCH USING MPLSOCCER LIBRARY
     pitch = Pitch(pitch_type='metricasports', line_zorder=2,
@@ -139,9 +136,9 @@ def catapultHeatMap(df, playerName, halfGame, halfBreak1st, halfBreak2nd):
     # FUNCTIONS FROM MPLSOCCER TO CREATE A HEATMAP
 
     if halfGame == 'First':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
+            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
     elif halfGame == 'Second':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd)].reset_index(drop=True)
+            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] == endGame)].reset_index(drop=True)
 
     bs = pitch.bin_statistic(heatMap['x'], heatMap['y'], bins=(10, 8))
     pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
@@ -151,7 +148,7 @@ def catapultHeatMap(df, playerName, halfGame, halfBreak1st, halfBreak2nd):
             [{"color": '#FF0000',"fontweight": 'bold'}]
 
     # TEXT: NAME OF THE PLAYER AND THE GAME
-    fig_text(s = namePlayer + ' <HeatMap>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.105, color='#181818', ha='center', fontsize=50);
+    fig_text(s = playerName + ' <HeatMap>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.105, color='#181818', ha='center', fontsize=50);
 
     fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
@@ -161,19 +158,17 @@ def catapultHeatMap(df, playerName, halfGame, halfBreak1st, halfBreak2nd):
     fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
     
     return plt.show()
-figHeatMap = catapultHeatMap(playerGPS, selected_player, select_half, half_end1st, half_start2nd)
+figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game)
 
 st.title('HeatMap')
 st.pyplot(figHeatMap)
 
 st.cache()
-def plotSprints(df, playerName, halfGame, halfBreak):
+def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
         
         #data = pd.read_csv(filePath, delimiter=';')
 
-        data = df.loc[df.Player == playerName].reset_index(drop=True)
-        
-        namePlayer = data['Player'].unique()[0]
+        data = df.loc[(df.Player == playerName) & (df.Day == matchDay)].reset_index(drop=True)
 
         # CREATE PITCH USING MPLSOCCER LIBRARY
         pitch = Pitch(pitch_type='metricasports', line_zorder=2,
@@ -185,9 +180,9 @@ def plotSprints(df, playerName, halfGame, halfBreak):
         fig.set_facecolor('#E8E8E8')
 
         if halfGame == 'First':
-                sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] <= halfBreak)].reset_index(drop=True)
+                sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
         elif halfGame == 'Second':
-                sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak)].reset_index(drop=True)
+                sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] == endGame)].reset_index(drop=True)
                 
         #Criação das setas que simbolizam os passes realizados bem sucedidos
         pitch.scatter(sprints['x'], sprints['y'], color='#181818', ax=ax)
@@ -207,7 +202,7 @@ def plotSprints(df, playerName, halfGame, halfBreak):
         fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
         
         return plt.show()
-figSprints = plotSprints(playerGPS, selected_player, select_half,  half_end1st, half_start2nd)
+figSprints = plotSprints(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game)
 
 st.title('Sprints')
 st.pyplot(figSprints)
