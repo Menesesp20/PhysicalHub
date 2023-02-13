@@ -1,6 +1,5 @@
 import pandas as pd
 import streamlit as st
-import base64
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
