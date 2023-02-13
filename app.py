@@ -108,59 +108,83 @@ half_start2nd = st.sidebar.text_input('Second Half Hours', '18:35:00')
 
 end_game = st.sidebar.text_input('End Hours', '19:22:00')
 
+game_direction = st.sidebar.text_input('Attacking Direction', 'Left')
+
 # Funtion to generate GPS Player HeatMap
-def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
+def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame, direction):
     
-    # Load GPS DATA (CSV FILE)
-    #data = pd.read_csv(filePath, delimiter=';')
-    
-    data = df.loc[(df.Player == playerName) & (df.Day == matchDay)].reset_index(drop=True)
-    
-    # CREATE PITCH USING MPLSOCCER LIBRARY
-    pitch = Pitch(pitch_type='metricasports', line_zorder=2,
-                pitch_length=106, pitch_width=74,
-                pitch_color='#E8E8E8', line_color='#181818',
-                corner_arcs=True, goal_type='box')
+        # Load GPS DATA (CSV FILE)
+        #data = pd.read_csv(filePath, delimiter=';')
+        
+        data = df.loc[(df.Player == playerName) & (df.Day == matchDay)].reset_index(drop=True)
+        
+        # CREATE PITCH USING MPLSOCCER LIBRARY
+        pitch = Pitch(pitch_type='metricasports', line_zorder=2,
+                        pitch_length=106, pitch_width=74,
+                        pitch_color='#E8E8E8', line_color='#181818',
+                        corner_arcs=True, goal_type='box')
 
-    fig, ax = pitch.draw(figsize=(15, 10))
-    fig.set_facecolor('#E8E8E8')
+        fig, ax = pitch.draw(figsize=(15, 10))
+        fig.set_facecolor('#E8E8E8')
 
-    # GRADIENT COLOR FOR THE HEATMAP
-    pearl_earring_cmap = LinearSegmentedColormap.from_list("Pearl Earring - 10 colors",
-                                                            ['#E8E8E8', '#FF0000'], N=10)
+        # GRADIENT COLOR FOR THE HEATMAP
+        pearl_earring_cmap = LinearSegmentedColormap.from_list("Pearl Earring - 10 colors",
+                                                                ['#E8E8E8', '#FF0000'], N=10)
 
 
-    # FUNCTIONS FROM MPLSOCCER TO CREATE A HEATMAP
+        # FUNCTIONS FROM MPLSOCCER TO CREATE A HEATMAP
 
-    if halfGame == 'First':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
-    elif halfGame == 'Second':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
+        if halfGame == 'First':
+                heatMap = data.loc[(data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
+        elif halfGame == 'Second':
+                heatMap = data.loc[(data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
 
-    bs = pitch.bin_statistic(heatMap['x'], heatMap['y'], bins=(10, 8))
-    pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
+        bs = pitch.bin_statistic(heatMap['y'], heatMap['x'], bins=(10, 8))
+        pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
 
-    #Params for the text inside the <> this is a function to highlight text
-    highlight_textprops =\
-            [{"color": '#FF0000',"fontweight": 'bold'}]
+        #Params for the text inside the <> this is a function to highlight text
+        highlight_textprops =\
+                [{"color": '#FF0000',"fontweight": 'bold'}]
 
-    # TEXT: NAME OF THE PLAYER AND THE GAME
-    fig_text(s = playerName + ' <HeatMap>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.105, color='#181818', ha='center', fontsize=50);
+        # TEXT: NAME OF THE PLAYER AND THE GAME
+        fig_text(s = playerName + ' <HeatMap>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.105, color='#181818', ha='center', fontsize=50);
 
-    fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
+        fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
-    fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
+        fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
 
-    # LOGO OF THE CLUB
-    fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
-    
-    return plt.show()
-figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game)
+        # LOGO OF THE CLUB
+        fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
+
+        if direction == 'Left':
+                fig_text(s = 'Attacking Direction',
+                        x = 0.5, y = 0.07,
+                        color='#181818', fontweight='bold',
+                        ha='center', va='center',
+                        fontsize=14)
+
+                # ARROW DIRECTION OF PLAY
+                ax.annotate('', xy=(0.3, -0.07), xycoords='axes fraction', xytext=(0.7, -0.07), 
+                        arrowprops=dict(arrowstyle="<-", color='#181818', lw=2))
+
+        elif direction == 'Right':
+                fig_text(s = 'Attacking Direction',
+                        x = 0.5, y = 0.07,
+                        color='#181818', fontweight='bold',
+                        ha='center', va='center',
+                        fontsize=14)
+
+                # ARROW DIRECTION OF PLAY
+                ax.annotate('', xy=(0.3, -0.07), xycoords='axes fraction', xytext=(0.7, -0.07), 
+                        arrowprops=dict(arrowstyle="->", color='#181818', lw=2))
+
+        return plt.show()
+figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
 
 st.title('HeatMap')
 st.pyplot(figHeatMap)
 
-def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
+def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame, direction):
         
         #data = pd.read_csv(filePath, delimiter=';')
 
@@ -181,7 +205,7 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
                 sprints = data.loc[(data['Velocity'] >= 25) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
                 
         #Criação das setas que simbolizam os passes realizados bem sucedidos
-        pitch.scatter(sprints['x'], sprints['y'], color='#181818', ax=ax)
+        pitch.scatter(sprints['y'], sprints['x'], color='#181818', ax=ax)
 
         #Params for the text inside the <> this is a function to highlight text
         highlight_textprops =\
@@ -197,8 +221,30 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
         # LOGO OF THE CLUB
         fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
         
+        if direction == 'Left':
+                fig_text(s = 'Attacking Direction',
+                        x = 0.5, y = 0.07,
+                        color='#181818', fontweight='bold',
+                        ha='center', va='center',
+                        fontsize=14)
+
+                # ARROW DIRECTION OF PLAY
+                ax.annotate('', xy=(0.3, -0.07), xycoords='axes fraction', xytext=(0.7, -0.07), 
+                        arrowprops=dict(arrowstyle="<-", color='#181818', lw=2))
+
+        elif direction == 'Right':
+                fig_text(s = 'Attacking Direction',
+                        x = 0.5, y = 0.07,
+                        color='#181818', fontweight='bold',
+                        ha='center', va='center',
+                        fontsize=14)
+
+                # ARROW DIRECTION OF PLAY
+                ax.annotate('', xy=(0.3, -0.07), xycoords='axes fraction', xytext=(0.7, -0.07), 
+                        arrowprops=dict(arrowstyle="->", color='#181818', lw=2))
+        
         return plt.show()
-figSprints = plotSprints(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game)
+figSprints = plotSprints(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
 
 st.title('Sprints')
 st.pyplot(figSprints)
