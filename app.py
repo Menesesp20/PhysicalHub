@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as path_effects
 from matplotlib.colors import LinearSegmentedColormap
 from mplsoccer import Pitch
 from highlight_text import  fig_text
@@ -139,9 +140,16 @@ def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
         elif halfGame == 'Second':
                 heatMap = data.loc[(data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
 
-        bs = pitch.bin_statistic(heatMap['y'], heatMap['x'], bins=(10, 8))
-        pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
+        bs = pitch.bin_statistic_positional(heatMap['y'], heatMap['x'],  statistic='count', positional='full', normalize=True)
+        
+        pitch.heatmap_positional(bs, edgecolors='#e8e8e8', ax=ax, cmap=pearl_earring_cmap, alpha=0.6)
+        
+        path_eff = [path_effects.Stroke(linewidth=3, foreground='black'),
+                        path_effects.Normal()]
 
+        pitch.label_heatmap(bs, color='#E8E8E8', fontsize=25,
+                                ax=ax, ha='center', va='center',
+                                str_format='{:.0%}', path_effects=path_eff)
         #Params for the text inside the <> this is a function to highlight text
         highlight_textprops =\
                 [{"color": '#FF0000',"fontweight": 'bold'}]
