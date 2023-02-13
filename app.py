@@ -32,7 +32,6 @@ This app performs visualization from GPS data!
 st.sidebar.header('Physical Hub')
 
 st.title('Upload Data')
-st.cache()
 def save_uploadedfile(uploadedfile):
      with open(os.path.join("Data", uploadedfile.name),"wb") as f:
          f.write(uploadedfile.getbuffer())
@@ -111,7 +110,6 @@ half_start2nd = st.sidebar.text_input('Second Half Hours', '18:35:00')
 end_game = st.sidebar.text_input('End Hours', '19:22:00')
 
 # Funtion to generate GPS Player HeatMap
-st.cache_data()
 def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
     
     # Load GPS DATA (CSV FILE)
@@ -163,7 +161,6 @@ figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_ha
 st.title('HeatMap')
 st.pyplot(figHeatMap)
 
-st.cache_data()
 def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
         
         #data = pd.read_csv(filePath, delimiter=';')
