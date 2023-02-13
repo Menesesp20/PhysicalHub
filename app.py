@@ -100,7 +100,10 @@ select_half = st.sidebar.selectbox('Period', half_option)
 
 firstHalf = '17:30:00'
 
-half = '18:18:00'
+
+#half_hours = ['First', 'Second']
+half = st.sidebar.text_input('Half Hours', '18:18:00')
+#half = '18:18:00'
 
 secondHalf = '18:35:00'
 
