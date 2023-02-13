@@ -44,7 +44,6 @@ if gps_file is not None:
    st.dataframe(df)
    save_uploadedfile(gps_file)
 
-st.cache_data()
 def ETL_GPS():
     def toCSV(url):
         df = pd.read_csv(url, delimiter=';', skiprows=8)
