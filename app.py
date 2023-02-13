@@ -45,7 +45,7 @@ if gps_file is not None:
    st.dataframe(df)
    save_uploadedfile(gps_file)
 
-st.cache()
+st.cache_data()
 def ETL_GPS():
     def toCSV(url):
         df = pd.read_csv(url, delimiter=';', skiprows=8)
@@ -111,7 +111,7 @@ half_start2nd = st.sidebar.text_input('Second Half Hours', '18:35:00')
 end_game = st.sidebar.text_input('End Hours', '19:22:00')
 
 # Funtion to generate GPS Player HeatMap
-st.cache()
+st.cache_data()
 def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
     
     # Load GPS DATA (CSV FILE)
@@ -163,7 +163,7 @@ figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_ha
 st.title('HeatMap')
 st.pyplot(figHeatMap)
 
-st.cache()
+st.cache_data()
 def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame):
         
         #data = pd.read_csv(filePath, delimiter=';')
