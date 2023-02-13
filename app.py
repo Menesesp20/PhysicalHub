@@ -20,11 +20,32 @@ prop = font_manager.FontProperties(fname=font_path)
 plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['font.sans-serif'] = prop.get_name()
 
+st.set_option('deprecation.showPyplotGlobalUse', False)
+
 st.title('Ceará Players GPS Hub')
+
+st.markdown("""
+This app performs visualization from GPS data!
+* **Data source:** Catapult.
+""")
 
 st.sidebar.header('Physical Hub')
 
-st.cache
+st.title('Upload Data')
+st.cache()
+def save_uploadedfile(uploadedfile):
+     with open(os.path.join("Data", uploadedfile.name),"wb") as f:
+         f.write(uploadedfile.getbuffer())
+     return st.success("Saved File:{} to Data".format(uploadedfile.name))
+ 
+gps_file = st.file_uploader("Upload a file", type=['csv','xlsx'])
+if gps_file is not None:
+   file_details = {"FileName":gps_file.name, "FileType":gps_file.type}
+   df  = pd.read_csv(gps_file, delimiter=';', skiprows=8)
+   st.dataframe(df)
+   save_uploadedfile(gps_file)
+
+st.cache()
 def ETL_GPS():
     def toCSV(url):
         df = pd.read_csv(url, delimiter=';', skiprows=8)
@@ -72,10 +93,10 @@ playerGPS = ETL_GPS()
 
 # Sidebar - Player selection
 sorted_unique_Player = sorted(playerGPS.Player.unique())
-selected_player = st.sidebar.selectbox('Players', sorted_unique_Player, sorted_unique_Player)
+selected_player = st.sidebar.selectbox('Players', sorted_unique_Player)
 
 half_option = ['First', 'Second']
-select_half = st.sidebar.selectbox('Period', half_option, half_option)
+select_half = st.sidebar.selectbox('Period', half_option)
 
 firstHalf = '17:30:00'
 
@@ -86,7 +107,7 @@ secondHalf = '18:35:00'
 gameEnd = '19:22:00'
 
 # Funtion to generate GPS Player HeatMap
-st.cache
+st.cache()
 def catapultHeatMap(df, playerName, halfGame, halfBreak):
     
     # Load GPS DATA (CSV FILE)
@@ -125,20 +146,22 @@ def catapultHeatMap(df, playerName, halfGame, halfBreak):
             [{"color": '#FF0000',"fontweight": 'bold'}]
 
     # TEXT: NAME OF THE PLAYER AND THE GAME
-    fig_text(s = namePlayer + ' <HeatMap>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.007, color='#181818', ha='center', fontsize=50);
+    fig_text(s = namePlayer + ' <HeatMap>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.105, color='#181818', ha='center', fontsize=50);
 
-    fig_text(s = halfGame + ' Half', x = 0.5, y = 0.94, color='#181818', ha='center', fontsize=20);
+    fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
-    fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 0.9, color='#181818', ha='center', fontsize=14);
+    fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
 
     # LOGO OF THE CLUB
-    fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.91, width=0.15, height=0.12)
+    fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
     
     return plt.show()
 figHeatMap = catapultHeatMap(playerGPS, selected_player, select_half, half)
 
+st.title('HeatMap')
 st.pyplot(figHeatMap)
 
+st.cache()
 def plotSprints(df, playerName, halfGame, halfBreak):
         
         #data = pd.read_csv(filePath, delimiter=';')
@@ -169,16 +192,17 @@ def plotSprints(df, playerName, halfGame, halfBreak):
                 [{"color": '#FF0000',"fontweight": 'bold'}]
 
         # TEXT: NAME OF THE PLAYER AND THE GAME
-        fig_text(s = playerName + ' <Sprints>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.007, color='#181818', ha='center', fontsize=50);
+        fig_text(s = playerName + ' <Sprints>', highlight_textprops=highlight_textprops, x = 0.5, y = 1.105, color='#181818', ha='center', fontsize=50);
         
-        fig_text(s = halfGame + ' Half', x = 0.5, y = 0.94, color='#181818', ha='center', fontsize=20);
+        fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
-        fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 0.9, color='#181818', ha='center', fontsize=14);
+        fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
 
         # LOGO OF THE CLUB
-        fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.91, width=0.15, height=0.12)
+        fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
         
         return plt.show()
 figSprints = plotSprints(playerGPS, selected_player, select_half, half)
 
+st.title('Sprints')
 st.pyplot(figSprints)
