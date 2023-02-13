@@ -206,3 +206,4 @@ figSprints = plotSprints(playerGPS, selected_player, select_half, half)
 
 st.title('Sprints')
 st.pyplot(figSprints)
+playerGPS = ETL_GPS()
