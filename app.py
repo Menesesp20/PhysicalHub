@@ -102,7 +102,9 @@ firstHalf = '17:30:00'
 
 
 #half_hours = ['First', 'Second']
-half = st.sidebar.text_input('Half Hours', '18:18:00')
+half_end1st = st.sidebar.text_input('Half Hours', '18:18:00')
+
+half_start2nd = st.sidebar.text_input('Half Hours', '18:35:00')
 #half = '18:18:00'
 
 secondHalf = '18:35:00'
@@ -111,7 +113,7 @@ gameEnd = '19:22:00'
 
 # Funtion to generate GPS Player HeatMap
 st.cache()
-def catapultHeatMap(df, playerName, halfGame, halfBreak):
+def catapultHeatMap(df, playerName, halfGame, halfBreak1st, halfBreak2nd):
     
     # Load GPS DATA (CSV FILE)
     #data = pd.read_csv(filePath, delimiter=';')
@@ -137,9 +139,9 @@ def catapultHeatMap(df, playerName, halfGame, halfBreak):
     # FUNCTIONS FROM MPLSOCCER TO CREATE A HEATMAP
 
     if halfGame == 'First':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] <= halfBreak)].reset_index(drop=True)
+            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
     elif halfGame == 'Second':
-            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak)].reset_index(drop=True)
+            heatMap = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd)].reset_index(drop=True)
 
     bs = pitch.bin_statistic(heatMap['x'], heatMap['y'], bins=(10, 8))
     pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
@@ -159,7 +161,7 @@ def catapultHeatMap(df, playerName, halfGame, halfBreak):
     fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
     
     return plt.show()
-figHeatMap = catapultHeatMap(playerGPS, selected_player, select_half, half)
+figHeatMap = catapultHeatMap(playerGPS, selected_player, select_half, half_end1st, half_start2nd)
 
 st.title('HeatMap')
 st.pyplot(figHeatMap)
@@ -205,7 +207,7 @@ def plotSprints(df, playerName, halfGame, halfBreak):
         fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
         
         return plt.show()
-figSprints = plotSprints(playerGPS, selected_player, select_half, half)
+figSprints = plotSprints(playerGPS, selected_player, select_half,  half_end1st, half_start2nd)
 
 st.title('Sprints')
 st.pyplot(figSprints)
