@@ -178,7 +178,7 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
         if halfGame == 'First':
                 sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
         elif halfGame == 'Second':
-                sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] == endGame)].reset_index(drop=True)
+                sprints = data.loc[(data['Velocity'] >= 6.94) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
                 
         #Criação das setas que simbolizam os passes realizados bem sucedidos
         pitch.scatter(sprints['x'], sprints['y'], color='#181818', ax=ax)
