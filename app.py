@@ -10,6 +10,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from mplsoccer import Pitch
 from highlight_text import  fig_text
 from soccerplots.utils import add_image
+import datetime
 
 from matplotlib import font_manager
 
@@ -48,6 +49,7 @@ if gps_file is not None:
    st.dataframe(df)
    save_uploadedfile(gps_file)
 
+st.cache_data(ttl=datetime.timedelta(hours=1), max_entries=1000)
 def ETL_GPS():
     def toCSV(url):
         df = pd.read_csv(url, delimiter=';', skiprows=8)
