@@ -1,6 +1,9 @@
 import pandas as pd
 import streamlit as st
 
+import numpy as np
+import scipy.stats as stats
+
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
 from matplotlib.colors import LinearSegmentedColormap
@@ -51,12 +54,8 @@ def ETL_GPS():
 
         return df
 
-    playerNames = []
     data = []
     for file in tqdm.tqdm(os.listdir(r'./Data')):
-
-        gameDay = file.split(' ')[0] + file.split(' ')[1]
-        #playerNames.append(file.split(' ')[6] + file.split(' ')[7])
 
         gpsData = toCSV('./Data/' + file)
 
@@ -159,7 +158,7 @@ def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
 
         fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
-        fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
+        fig_text(s = matchDay, x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
 
         # LOGO OF THE CLUB
         fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
@@ -224,7 +223,7 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
         
         fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
-        fig_text(s = 'Ceará SC vs Sampaio Corrêa FC | 04/02/2023', x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
+        fig_text(s = matchDay, x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
 
         # LOGO OF THE CLUB
         fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
@@ -256,4 +255,89 @@ figSprints = plotSprints(playerGPS, selected_player, selected_Day, select_half, 
 
 st.title('Sprints')
 st.pyplot(figSprints)
-playerGPS = ETL_GPS()
+
+def catapultMeanPos(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame, direction):
+    
+        # Load GPS DATA (CSV FILE)
+        #data = pd.read_csv(filePath, delimiter=';')
+        
+        data = df.loc[(df.Player == playerName) & (df.Day == matchDay)].reset_index(drop=True)
+        
+        # CREATE PITCH USING MPLSOCCER LIBRARY
+        pitch = Pitch(pitch_type='metricasports', line_zorder=2,
+                        pitch_length=106, pitch_width=74,
+                        pitch_color='#E8E8E8', line_color='#181818',
+                        corner_arcs=True, goal_type='box')
+
+        fig, ax = pitch.draw(figsize=(15, 10))
+        fig.set_facecolor('#E8E8E8')
+
+        # GRADIENT COLOR FOR THE HEATMAP
+        pearl_earring_cmap = LinearSegmentedColormap.from_list("Pearl Earring - 10 colors",
+                                                                ['#E8E8E8', '#FF0000'], N=10)
+
+
+    # FUNCTIONS FROM MPLSOCCER TO CREATE A HEATMAP
+
+        if halfGame == 'First':
+                player = data.loc[(data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
+        elif halfGame == 'Second':
+                player = data.loc[(data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
+
+        pearl_earring_cmap = LinearSegmentedColormap.from_list("Pearl Earring - 10 colors",
+                                                        ['#E8E8E8','#FF0000'], N=10)
+
+        bs = pitch.bin_statistic(player['y'], player['x'], bins=(10, 8))
+
+        convex = player[(np.abs(stats.zscore(player[['y','x']])) < 0.8).all(axis=1)]
+
+        pitch.heatmap(bs, edgecolors='#E8E8E8', ax=ax, cmap=pearl_earring_cmap)
+
+        hull = pitch.convexhull(convex['y'], convex['x'])
+
+        pitch.polygon(hull, ax=ax, edgecolor='#181818', facecolor='#181818', alpha=0.7, linestyle='--', linewidth=2.5)
+
+        pitch.scatter(x=convex['y'].mean(), y=convex['x'].mean(), ax=ax, c='#E8E8E8', edgecolor='#FF0000', lw=1.5, s=700, zorder=4)
+
+        #Params for the text inside the <> this is a function to highlight text
+        highlight_textprops =\
+                [{"color": '#FF0000',"fontweight": 'bold'}]
+
+        # TEXT: NAME OF THE PLAYER AND THE GAME
+        fig_text(s = playerName + ' <Average Position>', highlight_textprops=highlight_textprops, x = 0.52, y = 1.105, color='#181818', ha='center', fontsize=50);
+
+        fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
+
+        fig_text(s = matchDay, x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
+
+        # LOGO OF THE CLUB
+        fig = add_image(image='./Images/Clubs/Brasileirao/Ceara.png', fig=fig, left=0.1, bottom=0.985, width=0.15, height=0.12)
+
+        if direction == 'Left':
+                fig_text(s = 'Attacking Direction',
+                        x = 0.5, y = 0.07,
+                        color='#181818', fontweight='bold',
+                        ha='center', va='center',
+                        fontsize=14)
+
+                # ARROW DIRECTION OF PLAY
+                ax.annotate('', xy=(0.3, -0.07), xycoords='axes fraction', xytext=(0.7, -0.07), 
+                        arrowprops=dict(arrowstyle="<-", color='#181818', lw=2))
+
+        elif direction == 'Right':
+                fig_text(s = 'Attacking Direction',
+                        x = 0.5, y = 0.07,
+                        color='#181818', fontweight='bold',
+                        ha='center', va='center',
+                        fontsize=14)
+
+                # ARROW DIRECTION OF PLAY
+                ax.annotate('', xy=(0.3, -0.07), xycoords='axes fraction', xytext=(0.7, -0.07), 
+                        arrowprops=dict(arrowstyle="->", color='#181818', lw=2))
+                
+        return plt.show()
+
+figMeanPos = catapultMeanPos(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
+st.title('Average position')
+st.pyplot(figMeanPos)
+

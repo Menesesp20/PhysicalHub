@@ -9,3 +9,5 @@ pandas==1.5.2
 soccerplots==1.0.0
 streamlit==1.8.1
 tqdm==4.50.2
+numpy==1.24.2
+scipy==1.10.0
