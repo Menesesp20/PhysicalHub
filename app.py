@@ -68,6 +68,7 @@ def ETL_GPS():
 
         gpsData['Longitude'] = gpsData['Longitude'].apply(lambda x: x.replace(',', '.')).astype(float)
         gpsData['Latitude'] = gpsData['Latitude'].apply(lambda x: x.replace(',', '.')).astype(float)
+        gpsData['Player Load'] = gpsData['Player Load'].apply(lambda x: x.replace(',', '.')).astype(float)
 
         # VARIABLES TO USE THE MIN AND MAX VALUES AND CONVERT THE DATA WICH IS NEGATIVE TO A RANGE BETWEEN 0 AND 1
         lower_bound = gpsData['Longitude'].min()
@@ -112,7 +113,49 @@ end_game = st.sidebar.text_input('End Hours', '19:22:00')
 
 game_direction = st.sidebar.text_input('Attacking Direction', 'Left')
 
+playerLoad = round(playerGPS.loc[playerGPS.Player == selected_player]['Player Load'].sum(), 2)
+if select_half == 'First':
+        playerLoadHalf = round(playerGPS.loc[(playerGPS.Player == selected_player) &
+                                             (playerGPS['gameTime'] > start_game) &
+                                             (playerGPS['gameTime'] <= half_end1st)]['Player Load'].sum(), 2)
+        
+elif select_half == 'Second':
+        playerLoadHalf = round(playerGPS.loc[(playerGPS.Player == selected_player) &
+                                             (playerGPS['gameTime'] > half_start2nd) &
+                                             (playerGPS['gameTime'] <= end_game)]['Player Load'].sum(), 2)
+
+maxVelocity = playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25)]['Velocity'].max()
+if select_half == 'First':
+        maxVelocityHalf = playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
+                                        (playerGPS['gameTime'] > start_game) & (playerGPS['gameTime'] <= half_end1st)]['Velocity'].max()
+        
+elif select_half == 'Second':
+        maxVelocityHalf = playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
+                                        (playerGPS['gameTime'] > half_start2nd) & (playerGPS['gameTime'] <= end_game)]['Velocity'].max()
+
+sprints = len(playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25)])
+if select_half == 'First':
+        sprintsHalf = len(playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
+                                        (playerGPS['gameTime'] > start_game) & (playerGPS['gameTime'] <= half_end1st)])
+        
+elif select_half == 'Second':
+        sprintsHalf = len(playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
+                                        (playerGPS['gameTime'] > half_start2nd) & (playerGPS['gameTime'] <= end_game)])
+
+st.text('The value of the box is the half value compared with the overall game value.')
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Player Load", playerLoadHalf, playerLoadHalf, delta_color="off")
+col2.metric("Max Velocity", maxVelocityHalf, maxVelocity, delta_color="off")
+col3.metric("Nº Sprints", sprintsHalf, sprints, delta_color="off")
+
+col1, col2 = st.columns(2)
+lenght = col1.text_input('Pitch length', '106')
+
+width = col2.text_input('Pitch width', '74')
+
 # Funtion to generate GPS Player HeatMap
+st.cache_data(ttl=datetime.timedelta(hours=1), max_entries=1000)
 def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame, direction):
     
         # Load GPS DATA (CSV FILE)
@@ -122,7 +165,7 @@ def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
         
         # CREATE PITCH USING MPLSOCCER LIBRARY
         pitch = Pitch(pitch_type='metricasports', line_zorder=2,
-                        pitch_length=106, pitch_width=74,
+                        pitch_length=int(lenght), pitch_width=int(width),
                         pitch_color='#E8E8E8', line_color='#181818',
                         corner_arcs=True, goal_type='box')
 
@@ -193,6 +236,7 @@ figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_ha
 st.title('HeatMap')
 st.pyplot(figHeatMap)
 
+st.cache_data(ttl=datetime.timedelta(hours=1), max_entries=1000)
 def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame, direction):
         
         #data = pd.read_csv(filePath, delimiter=';')
@@ -258,7 +302,8 @@ figSprints = plotSprints(playerGPS, selected_player, selected_Day, select_half, 
 st.title('Sprints')
 st.pyplot(figSprints)
 
-def catapultMeanPos(df, playerName, matchDay, halfGame, startGame, halfBreak1st, halfBreak2nd, endGame, direction):
+st.cache_data(ttl=datetime.timedelta(hours=1), max_entries=1000)
+def catapultMeanPos(df, playerName, matchDay, halfGame, startGame, endGame, direction):
     
         # Load GPS DATA (CSV FILE)
         #data = pd.read_csv(filePath, delimiter=';')
@@ -281,10 +326,7 @@ def catapultMeanPos(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
 
     # FUNCTIONS FROM MPLSOCCER TO CREATE A HEATMAP
 
-        if halfGame == 'First':
-                player = data.loc[(data['gameTime'] >= startGame) & (data['gameTime'] <= halfBreak1st)].reset_index(drop=True)
-        elif halfGame == 'Second':
-                player = data.loc[(data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
+        player = data.loc[(data['gameTime'] >= startGame) & (data['gameTime'] <= endGame)].reset_index(drop=True)
 
         pearl_earring_cmap = LinearSegmentedColormap.from_list("Pearl Earring - 10 colors",
                                                         ['#E8E8E8','#FF0000'], N=10)
@@ -308,7 +350,7 @@ def catapultMeanPos(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
         # TEXT: NAME OF THE PLAYER AND THE GAME
         fig_text(s = playerName + ' <Average Position>', highlight_textprops=highlight_textprops, x = 0.52, y = 1.105, color='#181818', ha='center', fontsize=50);
 
-        fig_text(s = halfGame + ' Half', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
+        fig_text(s = 'All game', x = 0.5, y = 1.03, color='#181818', ha='center', fontsize=20);
 
         fig_text(s = matchDay, x = 0.5, y = 1, color='#181818', ha='center', fontsize=14);
 
@@ -339,7 +381,7 @@ def catapultMeanPos(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
                 
         return plt.show()
 
-figMeanPos = catapultMeanPos(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
+figMeanPos = catapultMeanPos(playerGPS, selected_player, selected_Day, select_half, start_game, end_game, game_direction)
 st.title('Average position')
 st.pyplot(figMeanPos)
 
