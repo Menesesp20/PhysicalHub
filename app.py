@@ -124,14 +124,45 @@ elif select_half == 'Second':
         maxVelocityHalf = playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
                                         (playerGPS['gameTime'] > half_start2nd) & (playerGPS['gameTime'] <= end_game)]['Velocity'].max()
 
-sprints = len(playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25)])
+def identify_sprints(df, player_name, day):
+    player_df = df[(df['Player'] == player_name) & (df['Day'] == day) &
+                   (df['gameTime'] > start_game) & (df['gameTime'] <= end_game)].reset_index(drop=True)
+
+    is_sprint = player_df['Velocity'] >= 25
+    sprint_sequence = (is_sprint.diff() != 0).cumsum() - 1
+    sprint_sequence[~is_sprint] = 0
+    player_df['isSprint'] = is_sprint
+    player_df['Sequence'] = sprint_sequence
+    player_df['startX'] = np.nan
+    player_df['startY'] = np.nan
+    player_df['xEnd'] = np.nan
+    player_df['yEnd'] = np.nan
+
+    for sprint_num in player_df['Sequence'].unique():
+        sprint_mask = player_df['Sequence'] == sprint_num
+        if sprint_mask.any():
+            start_row = player_df.loc[sprint_mask].iloc[0]
+            end_row = player_df.loc[sprint_mask].iloc[-1]
+            player_df.loc[sprint_mask, 'startX'] = start_row['x']
+            player_df.loc[sprint_mask, 'startY'] = start_row['y']
+            player_df.loc[sprint_mask, 'xEnd'] = end_row['x']
+            player_df.loc[sprint_mask, 'yEnd'] = end_row['y']
+
+    return player_df
+
+sprintCount = identify_sprints(playerGPS, selected_player, '04/02/2023')
+
+sprints = len(sprintCount.Sequence.unique()[1:])
 if select_half == 'First':
-        sprintsHalf = len(playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
-                                        (playerGPS['gameTime'] > start_game) & (playerGPS['gameTime'] <= half_end1st)])
+        sprintsHalf = len(sprintCount.loc[(sprintCount['Velocity'] >= 25) &
+                                          (sprintCount['gameTime'] > start_game) &
+                                          (sprintCount['gameTime'] <= half_end1st)]['Sequence'].unique())
         
 elif select_half == 'Second':
-        sprintsHalf = len(playerGPS.loc[(playerGPS.Player == selected_player) & (playerGPS['Velocity'] >= 25) &
-                                        (playerGPS['gameTime'] > half_start2nd) & (playerGPS['gameTime'] <= end_game)])
+        sprintsHalf = len(sprintCount.loc[(sprintCount.Player == selected_player) &
+                                        (sprintCount['Velocity'] >= 25) &
+                                        (sprintCount['gameTime'] > half_start2nd) &
+                                        (sprintCount['gameTime'] <= end_game)]['Sequence'].unique())
 
 st.text('The value of the box is the half value compared with the overall game value.')
 
@@ -223,7 +254,6 @@ def catapultHeatMap(df, playerName, matchDay, halfGame, startGame, halfBreak1st,
 
         return plt.show()
 figHeatMap = catapultHeatMap(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
-
 st.title('HeatMap')
 st.pyplot(figHeatMap)
 
@@ -249,7 +279,9 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
                 sprints = data.loc[(data['Velocity'] >= 25) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
                 
         #Criação das setas que simbolizam os passes realizados bem sucedidos
-        pitch.scatter(sprints['y'], sprints['x'], color='#181818', ax=ax)
+        pitch.arrows(sprints['startX'], sprints['startY'],
+                     sprints['xEnd'], sprints['yEnd'], width=2,
+                     headwidth=10, headlength=10, color='#181818', ax=ax, label='Sprints')
 
         #Params for the text inside the <> this is a function to highlight text
         highlight_textprops =\
@@ -288,8 +320,7 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
                         arrowprops=dict(arrowstyle="->", color='#181818', lw=2))
         
         return plt.show()
-figSprints = plotSprints(playerGPS, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
-
+figSprints = plotSprints(sprintCount, selected_player, selected_Day, select_half, start_game, half_end1st, half_start2nd, end_game, game_direction)
 st.title('Sprints')
 st.pyplot(figSprints)
 
