@@ -150,7 +150,7 @@ def identify_sprints(df, player_name, day):
 
     return player_df
 
-sprintCount = identify_sprints(playerGPS, selected_player, '04/02/2023')
+sprintCount = identify_sprints(playerGPS, selected_player, selected_Day)
 
 sprints = len(sprintCount.Sequence.unique()[1:])
 if select_half == 'First':
