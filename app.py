@@ -279,8 +279,8 @@ def plotSprints(df, playerName, matchDay, halfGame, startGame, halfBreak1st, hal
                 sprints = data.loc[(data['Velocity'] >= 25) & (data['gameTime'] > halfBreak2nd) & (data['gameTime'] <= endGame)].reset_index(drop=True)
                 
         #Criação das setas que simbolizam os passes realizados bem sucedidos
-        pitch.arrows(sprints['startX'], sprints['startY'],
-                     sprints['xEnd'], sprints['yEnd'], width=2,
+        pitch.arrows(sprints['startY'], sprints['startX'],
+                     sprints['yEnd'], sprints['xEnd'], width=2,
                      headwidth=10, headlength=10, color='#181818', ax=ax, label='Sprints')
 
         #Params for the text inside the <> this is a function to highlight text
